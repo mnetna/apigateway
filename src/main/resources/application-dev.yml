@@ -1,0 +1,56 @@
+token:
+  core:
+    url: http://10.10.1.170/LOGIN.SVC
+    #    url: http://localhost:8080/LOGIN.SVC
+    cron: '0 0 0/23 * * *'
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://10.10.1.160:5443/FRONTWEB?currentSchema=gateway
+    username: frontweb
+    password: frontweb
+    platform: postgres
+  jpa:
+    hibernate:
+      ddl-auto: validate
+      show-sql: true
+  logging:
+    level:
+      org.springframework.web: DEBUG
+      guru.springframework.controllers: DEBUG
+      org.hibernate: DEBUG
+      org.springframework.cloud.gateway: DEBUG
+      reactor.netty.http.client: INFO
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: gateway, refresh
+    endpoint:
+      gateway:
+        enabled: true
+
+  # Cloud Gateway
+  cloud:
+    gateway:
+      default-filters:
+        - name: GlobalFilter
+          args:
+            baseMessage: Spring Cloud Gateway GlobalFilter
+            preLogger: true
+            postLogger: true
+      routes:
+        - id: core
+          uri: http://10.10.1.170/
+          #          uri: http://localhost:8080/**
+          predicates:
+            - Path=/hanati/**
+          filters:
+            - RewritePath=/hanati/(?<segment>.*), /$\{segment}
+            - name: Token
+              args:
+                key: core
+                baseMessage: Core Routes
+                preLogger: true
+                postLogger: true
